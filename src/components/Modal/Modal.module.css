@@ -1,0 +1,42 @@
+/* .Modal__backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.Modal__window {
+  background-color: #fff;
+  width: 800px;
+  height: 600px;
+  border-radius: 2px;
+  outline: 1px solid black;
+
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+} */
+
+/*
+ * Стили компонента Modal
+ */
+
+.Modal__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.Modal__window {
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 24px);
+}

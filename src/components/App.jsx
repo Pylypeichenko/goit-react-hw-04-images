@@ -6,6 +6,8 @@ import css from './App-styles.module.css';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
+import Spinner from './Spinner/Spinner';
+import Modal from './Modal/Modal';
 
 export class App extends Component {
   state = {
@@ -13,12 +15,17 @@ export class App extends Component {
     images: [],
     page: 1,
     perPage: 12,
+    isLoading: false,
+    showModal: false,
+    selectedImage: '',
   };
 
   componentDidMount() {
     const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
     const URL = 'https://pixabay.com/api/';
     const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
+
+    this.pageReset();
 
     return axios
       .get(searchQueryUrl)
@@ -32,11 +39,16 @@ export class App extends Component {
       const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
       const URL = 'https://pixabay.com/api/';
       const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
+
+      this.pageReset();
+      this.setState({ isLoading: true });
+
       return axios
         .get(searchQueryUrl)
         .then(response => response.data.hits)
         .then(images => this.setState({ images }))
-        .then(this.pageIncrement());
+        .then(this.pageIncrement())
+        .finally(this.setState({ isLoading: false }));
     }
   }
 
@@ -44,6 +56,8 @@ export class App extends Component {
     const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
     const URL = 'https://pixabay.com/api/';
     const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
+
+    this.setState({ isLoading: true });
 
     return axios
       .get(searchQueryUrl)
@@ -54,7 +68,7 @@ export class App extends Component {
         }))
       )
       .then(this.pageIncrement())
-      .then(window.scrollBy(0, window.innerHeight));
+      .finally(this.setState({ isLoading: false }));
   };
 
   pageReset = () => {
@@ -66,23 +80,47 @@ export class App extends Component {
   };
 
   getSearchQuery = data => {
-    window.scrollBy({
-      top: -260,
+    window.scrollTo({
+      top: 0,
       behavior: 'smooth',
     });
 
     this.setState({ searchQuery: data });
-    this.pageReset();
+  };
+
+  modalOpen = () => {
+    if (!this.state.showModal) {
+      this.setState({ showModal: true });
+    }
+  };
+
+  modalClose = () => {
+    if (this.state.showModal) {
+      this.setState({ showModal: false });
+    }
+  };
+
+  getImageData = data => {
+    this.setState({ selectedImage: data });
+    this.modalOpen();
   };
 
   render() {
-    const { images, perPage } = this.state;
+    const { images, perPage, isLoading, showModal, selectedImage } = this.state;
 
     return (
       <div className={css.App}>
+        {showModal && (
+          <Modal>
+            <img src={selectedImage.largeImageURL} alt={selectedImage.tags} />
+          </Modal>
+        )}
         <Searchbar onFormSubmit={this.getSearchQuery} />
-        <ImageGallery images={images} />
-        {images.length >= perPage && <Button handleClick={this.onLoadMore} />}
+        <ImageGallery images={images} getImageObj={this.getImageData} />
+        {isLoading && <Spinner />}
+        {images.length >= perPage && images.length % perPage === 0 && (
+          <Button handleClick={this.onLoadMore} />
+        )}
       </div>
     );
   }
