@@ -1,6 +1,5 @@
 import { Component } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
 
 import css from './App-styles.module.css';
 
