@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
 
 import css from './App-styles.module.css';
 
@@ -15,60 +16,63 @@ export class App extends Component {
     images: [],
     page: 1,
     perPage: 12,
-    isLoading: false,
     showModal: false,
     selectedImage: '',
+    status: 'idle',
+    error: null,
   };
 
   componentDidMount() {
-    const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
-    const URL = 'https://pixabay.com/api/';
-    const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
-
     this.pageReset();
+    this.setState({ status: 'pending' });
 
-    return axios
-      .get(searchQueryUrl)
-      .then(response => response.data.hits)
-      .then(images => this.setState({ images }))
-      .then(this.pageIncrement());
+    return this.fetchData()
+      .then(images => this.setState({ images, status: 'resolved' }))
+      .then(this.pageIncrement())
+      .catch(error => this.setState({ error, status: 'rejected' }));
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.searchQuery !== this.state.searchQuery) {
-      const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
-      const URL = 'https://pixabay.com/api/';
-      const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
-
       this.pageReset();
-      this.setState({ isLoading: true });
+      this.setState({ status: 'pending' });
 
-      return axios
-        .get(searchQueryUrl)
-        .then(response => response.data.hits)
-        .then(images => this.setState({ images }))
+      return this.fetchData()
+        .then(images => {
+          return this.setState({ images, status: 'resolved' });
+        })
         .then(this.pageIncrement())
-        .finally(this.setState({ isLoading: false }));
+        .catch(error => this.setState({ error, status: 'rejected' }));
     }
   }
 
   onLoadMore = () => {
+    this.setState({ status: 'pending' });
+
+    return this.fetchData()
+      .then(nextImages =>
+        this.setState(({ images }) => ({
+          images: [...images, ...nextImages],
+          status: 'resolved',
+        }))
+      )
+      .then(this.pageIncrement())
+      .catch(error => this.setState({ error, status: 'rejected' }));
+  };
+
+  fetchData = async () => {
     const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
     const URL = 'https://pixabay.com/api/';
     const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
 
-    this.setState({ isLoading: true });
-
-    return axios
-      .get(searchQueryUrl)
-      .then(response => response.data.hits)
-      .then(nextImages =>
-        this.setState(({ images }) => ({
-          images: [...images, ...nextImages],
-        }))
-      )
-      .then(this.pageIncrement())
-      .finally(this.setState({ isLoading: false }));
+    return axios.get(searchQueryUrl).then(response => {
+      if (response.status === 200) {
+        return response.data.hits;
+      }
+      return Promise.reject(
+        new Error('Oops! Something went wrong. Please reload the page :(')
+      );
+    });
   };
 
   pageReset = () => {
@@ -106,18 +110,25 @@ export class App extends Component {
   };
 
   render() {
-    const { images, perPage, isLoading, showModal, selectedImage } = this.state;
+    const { images, perPage, status, showModal, selectedImage, error } =
+      this.state;
 
     return (
       <div className={css.App}>
         {showModal && (
-          <Modal>
+          <Modal onModalClose={this.modalClose}>
             <img src={selectedImage.largeImageURL} alt={selectedImage.tags} />
           </Modal>
         )}
+
         <Searchbar onFormSubmit={this.getSearchQuery} />
+
+        {status === 'rejected' && <p>{error.message}</p>}
+
         <ImageGallery images={images} getImageObj={this.getImageData} />
-        {isLoading && <Spinner />}
+
+        {status === 'pending' && <Spinner />}
+
         {images.length >= perPage && images.length % perPage === 0 && (
           <Button handleClick={this.onLoadMore} />
         )}
