@@ -1,5 +1,4 @@
 import { Component } from 'react';
-import axios from 'axios';
 
 import css from './App-styles.module.css';
 
@@ -8,6 +7,7 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Spinner from './Spinner/Spinner';
 import Modal from './Modal/Modal';
+import fetchData from '../api-services/fetchData';
 
 export class App extends Component {
   state = {
@@ -22,56 +22,37 @@ export class App extends Component {
   };
 
   componentDidMount() {
-    this.pageReset();
-    this.setState({ status: 'pending' });
-
-    return this.fetchData()
-      .then(images => this.setState({ images, status: 'resolved' }))
-      .then(this.pageIncrement())
-      .catch(error => this.setState({ error, status: 'rejected' }));
+    this.createGallery();
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.searchQuery !== this.state.searchQuery) {
-      this.pageReset();
-      this.setState({ status: 'pending' });
-
-      return this.fetchData()
-        .then(images => {
-          return this.setState({ images, status: 'resolved' });
-        })
-        .then(this.pageIncrement())
-        .catch(error => this.setState({ error, status: 'rejected' }));
+      this.createGallery();
     }
   }
+  createGallery = () => {
+    this.setState({ status: 'pending' });
+    const { searchQuery, perPage, page } = this.state;
+
+    return fetchData(searchQuery, perPage, page)
+      .then(images => this.setState({ images, status: 'resolved' }))
+      .catch(error => this.setState({ error, status: 'rejected' }))
+      .finally(this.pageIncrement());
+  };
 
   onLoadMore = () => {
     this.setState({ status: 'pending' });
+    const { searchQuery, perPage, page } = this.state;
 
-    return this.fetchData()
+    return fetchData(searchQuery, perPage, page)
       .then(nextImages =>
         this.setState(({ images }) => ({
           images: [...images, ...nextImages],
           status: 'resolved',
         }))
       )
-      .then(this.pageIncrement())
-      .catch(error => this.setState({ error, status: 'rejected' }));
-  };
-
-  fetchData = async () => {
-    const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
-    const URL = 'https://pixabay.com/api/';
-    const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${this.state.searchQuery}&image_type=photo&per_page=${this.state.perPage}&page=${this.state.page}`;
-
-    return axios.get(searchQueryUrl).then(response => {
-      if (response.status === 200) {
-        return response.data.hits;
-      }
-      return Promise.reject(
-        new Error('Oops! Something went wrong. Please reload the page :(')
-      );
-    });
+      .catch(error => this.setState({ error, status: 'rejected' }))
+      .finally(this.pageIncrement());
   };
 
   pageReset = () => {
@@ -88,7 +69,8 @@ export class App extends Component {
       behavior: 'smooth',
     });
 
-    this.setState({ searchQuery: data });
+    this.setState({ searchQuery: data, images: [] });
+    this.pageReset();
   };
 
   modalOpen = () => {
