@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 import css from './App-styles.module.css';
 
@@ -19,6 +20,7 @@ export class App extends Component {
     selectedImage: '',
     status: 'idle',
     error: null,
+    totalQueryHits: 0,
   };
 
   componentDidMount() {
@@ -38,38 +40,39 @@ export class App extends Component {
     const { searchQuery, perPage, page } = this.state;
 
     return fetchData(searchQuery, perPage, page)
-      .then(nextImages =>
-        this.setState(({ images }) => ({
-          images: [...images, ...nextImages],
+      .then(data => {
+        if (data.totalHits === 0) {
+          Notify.warning(`We couldn't find anything. 
+            Try another word for search`);
+        }
+        if (data.totalHits !== 0) {
+          Notify.success(`We found ${data.totalHits} images on your request`);
+        }
+
+        this.setState({ totalQueryHits: data.totalHits });
+
+        const imagesArray = data.hits.map(obj => {
+          const newObj = {
+            id: obj.id,
+            webformatURL: obj.webformatURL,
+            tags: obj.tags,
+            largeImageURL: obj.largeImageURL,
+          };
+
+          return newObj;
+        });
+
+        return this.setState(({ images }) => ({
+          images: [...images, ...imagesArray],
           status: 'resolved',
-        }))
-      )
-      .catch(error => this.setState({ error, status: 'rejected' }))
+        }));
+      })
+      .catch(error => {
+        Notify.error('Something went wrong. Please try again.');
+        this.setState({ error, status: 'rejected' });
+      })
       .finally(this.pageIncrement());
-
-    // this.setState({ status: 'pending' });
-    // const { searchQuery, perPage, page } = this.state;
-
-    // return fetchData(searchQuery, perPage, page)
-    //   .then(images => this.setState({ images, status: 'resolved' }))
-    //   .catch(error => this.setState({ error, status: 'rejected' }))
-    //   .finally(this.pageIncrement());
   };
-
-  // onLoadMore = () => {
-  //   this.setState({ status: 'pending' });
-  //   const { searchQuery, perPage, page } = this.state;
-
-  //   return fetchData(searchQuery, perPage, page)
-  //     .then(nextImages =>
-  //       this.setState(({ images }) => ({
-  //         images: [...images, ...nextImages],
-  //         status: 'resolved',
-  //       }))
-  //     )
-  //     .catch(error => this.setState({ error, status: 'rejected' }))
-  //     .finally(this.pageIncrement());
-  // };
 
   pageReset = () => {
     this.setState({ page: 1 });
@@ -107,7 +110,7 @@ export class App extends Component {
   };
 
   render() {
-    const { images, perPage, status, showModal, selectedImage, error } =
+    const { images, status, showModal, selectedImage, error, totalQueryHits } =
       this.state;
 
     return (
@@ -126,7 +129,7 @@ export class App extends Component {
 
         {status === 'pending' && <Spinner />}
 
-        {images.length >= perPage && images.length % perPage === 0 && (
+        {images.length < totalQueryHits && (
           <Button handleClick={this.createGallery} />
         )}
       </div>
