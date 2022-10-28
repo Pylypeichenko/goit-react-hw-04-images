@@ -8,14 +8,14 @@ class Searchbar extends Component {
 
   handleInputChange = event => {
     this.setState({
-      inputValue: event.currentTarget.value.toLowerCase().trim(),
+      inputValue: event.currentTarget.value,
     });
   };
 
   handleFormSubmit = event => {
     event.preventDefault();
 
-    this.props.onFormSubmit(this.state.inputValue);
+    this.props.onFormSubmit(this.state.inputValue.toLowerCase().trim());
   };
 
   render() {
