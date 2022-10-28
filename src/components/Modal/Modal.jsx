@@ -6,12 +6,6 @@ import css from './Modal.module.css';
 const modalRoot = document.querySelector('#modal_root');
 
 const Modal = ({ children, onModalClose }) => {
-  const handleEscapeKeydown = e => {
-    if (e.code === 'Escape') {
-      onModalClose();
-    }
-  };
-
   const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
       onModalClose();
@@ -19,10 +13,18 @@ const Modal = ({ children, onModalClose }) => {
   };
 
   useEffect(() => {
-    window.addEventListener('keydown', handleEscapeKeydown);
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Escape') {
+        onModalClose();
+      }
+    });
 
-    return window.removeEventListener('keydown', handleEscapeKeydown);
-  }, []);
+    return window.removeEventListener('keydown', e => {
+      if (e.code === 'Escape') {
+        onModalClose();
+      }
+    });
+  }, [onModalClose]);
 
   return createPortal(
     <div className={css.Modal__backdrop} onClick={handleBackdropClick}>

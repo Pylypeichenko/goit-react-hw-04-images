@@ -23,6 +23,7 @@ export const App = () => {
   const [totalQueryHits, setTotalQueryHits] = useState(0);
 
   const createGallery = () => {
+    setPerPage(12);
     setStatus('pending');
 
     return fetchData(searchQuery, perPage, page)
@@ -95,6 +96,7 @@ export const App = () => {
 
   useEffect(() => {
     createGallery();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   return (
