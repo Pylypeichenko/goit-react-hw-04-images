@@ -22,25 +22,18 @@ export class App extends Component {
   };
 
   componentDidMount() {
+    console.log('componentDidMount');
     this.createGallery();
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.searchQuery !== this.state.searchQuery) {
+      console.log('componentDidUpdate');
       this.createGallery();
     }
   }
+
   createGallery = () => {
-    this.setState({ status: 'pending' });
-    const { searchQuery, perPage, page } = this.state;
-
-    return fetchData(searchQuery, perPage, page)
-      .then(images => this.setState({ images, status: 'resolved' }))
-      .catch(error => this.setState({ error, status: 'rejected' }))
-      .finally(this.pageIncrement());
-  };
-
-  onLoadMore = () => {
     this.setState({ status: 'pending' });
     const { searchQuery, perPage, page } = this.state;
 
@@ -53,7 +46,30 @@ export class App extends Component {
       )
       .catch(error => this.setState({ error, status: 'rejected' }))
       .finally(this.pageIncrement());
+
+    // this.setState({ status: 'pending' });
+    // const { searchQuery, perPage, page } = this.state;
+
+    // return fetchData(searchQuery, perPage, page)
+    //   .then(images => this.setState({ images, status: 'resolved' }))
+    //   .catch(error => this.setState({ error, status: 'rejected' }))
+    //   .finally(this.pageIncrement());
   };
+
+  // onLoadMore = () => {
+  //   this.setState({ status: 'pending' });
+  //   const { searchQuery, perPage, page } = this.state;
+
+  //   return fetchData(searchQuery, perPage, page)
+  //     .then(nextImages =>
+  //       this.setState(({ images }) => ({
+  //         images: [...images, ...nextImages],
+  //         status: 'resolved',
+  //       }))
+  //     )
+  //     .catch(error => this.setState({ error, status: 'rejected' }))
+  //     .finally(this.pageIncrement());
+  // };
 
   pageReset = () => {
     this.setState({ page: 1 });
@@ -111,7 +127,7 @@ export class App extends Component {
         {status === 'pending' && <Spinner />}
 
         {images.length >= perPage && images.length % perPage === 0 && (
-          <Button handleClick={this.onLoadMore} />
+          <Button handleClick={this.createGallery} />
         )}
       </div>
     );
