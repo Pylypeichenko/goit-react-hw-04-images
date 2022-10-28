@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+
 import css from './Modal.module.css';
 
 const modalRoot = document.querySelector('#modal_root');
@@ -30,6 +31,8 @@ const Modal = ({ children, onModalClose }) => {
     modalRoot
   );
 };
+
+export default Modal;
 
 // class OldModal extends Component {
 //   componentDidMount() {
@@ -62,5 +65,3 @@ const Modal = ({ children, onModalClose }) => {
 //     );
 //   }
 // }
-
-export default Modal;

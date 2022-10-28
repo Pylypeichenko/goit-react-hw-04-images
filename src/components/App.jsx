@@ -1,4 +1,3 @@
-import { Component } from 'react';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 import css from './App-styles.module.css';
@@ -33,7 +32,9 @@ export const App = () => {
             Try another word for search`);
         }
         if (data.totalHits !== 0) {
-          Notify.success(`We found ${data.totalHits} images on your request`);
+          Notify.success(
+            `We found ${data.totalHits - images.length} images on your request`
+          );
         }
 
         setTotalQueryHits(data.totalHits);
