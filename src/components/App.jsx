@@ -33,9 +33,7 @@ export const App = () => {
             Try another word for search`);
         }
         if (data.totalHits !== 0) {
-          Notify.success(
-            `We found ${data.totalHits - images.length} images on your request`
-          );
+          Notify.success(`We found ${data.totalHits - images.length} images`);
         }
 
         setTotalQueryHits(data.totalHits);
