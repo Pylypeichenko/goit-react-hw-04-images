@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const fetchData = async (searchQuery, perPage, page) => {
+const fetchData = async (searchQuery, page) => {
   const URL_KEY = '29852735-acc344f41552f923d8dc8cb55';
   const URL = 'https://pixabay.com/api/';
-  const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${searchQuery}&image_type=photo&per_page=${perPage}&page=${page}`;
+  const searchQueryUrl = `${URL}?key=${URL_KEY}&q=${searchQuery}&image_type=photo&per_page=12&page=${page}`;
 
   return axios
     .get(searchQueryUrl)
