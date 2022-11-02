@@ -21,17 +21,23 @@ export const App = () => {
   const [error, setError] = useState(null);
   const [totalQueryHits, setTotalQueryHits] = useState(0);
 
-  const createGallery = () => {
-    setStatus('pending');
+  useEffect(() => {
+    const createGallery = async () => {
+      setStatus('pending');
 
-    return fetchData(searchQuery, page)
-      .then(data => {
+      try {
+        const data = await fetchData(searchQuery, page);
         if (data.totalHits === 0) {
           Notify.warning(`We couldn't find anything. 
             Try another word for search`);
+          setStatus('resolved');
+          return;
         }
         if (data.totalHits !== 0 && page === 1) {
           Notify.success(`We found ${data.totalHits - images.length} images`);
+        }
+        if (data.totalHits === images.length) {
+          Notify.info('These images are final for your request');
         }
 
         setTotalQueryHits(data.totalHits);
@@ -48,14 +54,17 @@ export const App = () => {
         });
 
         setStatus('resolved');
-        return setImages([...images, ...imagesArray]);
-      })
-      .catch(error => {
+        return setImages(images => [...images, ...imagesArray]);
+      } catch (error) {
         Notify.error('Something went wrong. Please try again.');
         setError(error);
         setStatus('rejected');
-      });
-  };
+      }
+    };
+
+    createGallery();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, page]);
 
   const pageIncrement = () => {
     setPage(state => state + 1);
@@ -89,19 +98,8 @@ export const App = () => {
     modalOpen();
   };
 
-  useEffect(() => {
-    createGallery();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, page]);
-
   return (
     <div className={css.App}>
-      {showModal && (
-        <Modal onModalClose={modalClose}>
-          <img src={selectedImage.largeImageURL} alt={selectedImage.tags} />
-        </Modal>
-      )}
-
       <Searchbar onFormSubmit={getSearchQuery} />
 
       {status === 'rejected' && <p>{error.message}</p>}
@@ -111,6 +109,12 @@ export const App = () => {
       {status === 'pending' && <Spinner />}
 
       {images.length < totalQueryHits && <Button handleClick={pageIncrement} />}
+
+      {showModal && (
+        <Modal onModalClose={modalClose}>
+          <img src={selectedImage.largeImageURL} alt={selectedImage.tags} />
+        </Modal>
+      )}
     </div>
   );
 };
